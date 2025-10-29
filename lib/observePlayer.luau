@@ -15,9 +15,9 @@ local Players = game:GetService("Players")
 	observePlayer(function(player)
 		print("Player entered game", player.Name)
 
-		return function()
+		return function(exitReason)
 			-- Cleanup
-			print("Player left game (or observer stopped)", player.Name)
+			print("Player left game", player.Name, "reason", exitReason.Name)
 		end
 	end)
 	```
@@ -26,7 +26,7 @@ local function observePlayer(callback: Callback): () -> ()
 	local playerAddedConn: RBXScriptConnection
 	local playerRemovingConn: RBXScriptConnection
 
-	local cleanupsPerPlayer: { [Player]: () -> () } = {}
+	local cleanupsPerPlayer: { [Player]: (exitReason: Enum.PlayerExitReason) -> () } = {}
 
 	local function OnPlayerAdded(player: Player)
 		if not playerAddedConn.Connected then
@@ -39,17 +39,17 @@ local function observePlayer(callback: Callback): () -> ()
 				if playerAddedConn.Connected and player.Parent then
 					cleanupsPerPlayer[player] = cleanup
 				else
-					task.spawn(cleanup)
+					task.spawn(cleanup, Enum.PlayerExitReason.Unknown)
 				end
 			end
 		end)
 	end
 
-	local function OnPlayerRemoving(player: Player)
+	local function OnPlayerRemoving(player: Player, exitReason: Enum.PlayerExitReason)
 		local cleanup = cleanupsPerPlayer[player]
 		cleanupsPerPlayer[player] = nil
 		if typeof(cleanup) == "function" then
-			task.spawn(cleanup)
+			task.spawn(cleanup, exitReason)
 		end
 	end
 
@@ -75,7 +75,7 @@ local function observePlayer(callback: Callback): () -> ()
 
 		local player = next(cleanupsPerPlayer)
 		while player do
-			OnPlayerRemoving(player)
+			OnPlayerRemoving(player, Enum.PlayerExitReason.Unknown)
 			player = next(cleanupsPerPlayer)
 		end
 	end
