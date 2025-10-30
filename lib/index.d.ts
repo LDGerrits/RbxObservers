@@ -96,7 +96,7 @@ interface Observers {
 	 * @param callback Observer called for each player. Optional cleanup function can be returned, which is called when the player leaves the game.
 	 * @returns Cleanup function, which stops observing players.
 	 */
-	observePlayer: (callback: (player: Player) => (() => void) | void) => () => void;
+	observePlayer: (callback: (player: Player) => ((exitReason: Enum.PlayerExitReason) => void) | void) => () => void;
 
 	/**
 	 * Observers characters in the game.
