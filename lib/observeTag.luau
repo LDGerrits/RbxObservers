@@ -4,9 +4,7 @@ local CollectionService = game:GetService("CollectionService")
 
 type InstanceStatus = "__inflight__" | "__dead__"
 
-type CallbackReturnFn<T> = (instance: T) -> () -> ()
-type CallbackReturnVoid<T> = (instance: T) -> ()
-type Callback<T> = CallbackReturnFn<T> | CallbackReturnVoid<T>
+type Callback<T> = (instance: T) -> (() -> ())?
 
 --[=[
 	@within Observers

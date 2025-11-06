@@ -1,8 +1,6 @@
 --!strict
 
-type CallbackReturnFn = (player: Player) -> () -> ()
-type CallbackReturnVoid = (player: Player) -> ()
-type Callback = CallbackReturnFn | CallbackReturnVoid
+type Callback = (player: Player) -> (() -> ())?
 
 local Players = game:GetService("Players")
 

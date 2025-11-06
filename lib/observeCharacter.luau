@@ -2,9 +2,7 @@
 
 local observePlayer = require(script.Parent.observePlayer)
 
-type CallbackReturnFn = (player: Player, character: Model) -> () -> ()
-type CallbackReturnVoid = (player: Player, character: Model) -> ()
-type Callback = CallbackReturnFn | CallbackReturnVoid
+type Callback = (player: Player, character: Model) -> (() -> ())?
 
 --[=[
 	@within Observers

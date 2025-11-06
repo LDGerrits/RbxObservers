@@ -1,8 +1,6 @@
 --!strict
 
-type CallbackReturnFn<T> = (value: T) -> () -> ()
-type CallbackReturnVoid<T> = (value: T) -> ()
-type Callback<T> = CallbackReturnFn<T> | CallbackReturnVoid<T>
+type Callback<T> = (value: T) -> (() -> ())?
 
 --[=[
 	@within Observers

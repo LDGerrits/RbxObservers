@@ -17,9 +17,7 @@ export type AttributeValue =
 	| Rect
 	| Font
 
-type CallbackReturnFn = (value: AttributeValue) -> () -> ()
-type CallbackReturnVoid = (value: AttributeValue) -> ()
-type Callback = CallbackReturnFn | CallbackReturnVoid
+type Callback = (value: AttributeValue) -> (() -> ())?
 
 local function defaultGuard(_value: AttributeValue)
 	return true
