@@ -42,10 +42,10 @@ The Package folder created by Wally should be synced into Roblox Studio through 
 The Observers module can now be used in scripts, such as the following:
 ```lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 local Observers = require(ReplicatedStorage.Packages.Observers)
+local observeTag = Observers.observeTag
 
-Observers.observeTag("SomeTag", function(instance: Instance)
+observeTag("SomeTag", function(instance: Instance)
 	print(`Observing {instance}`)
 	return function()
 		print(`Stopped observing {instance}`)

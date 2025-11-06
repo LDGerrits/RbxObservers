@@ -26,7 +26,7 @@ interface Observers {
 	observeAttribute: (
 		instance: Instance,
 		name: string,
-		callback: (value: AttributeValue) => () => void,
+		callback: (value: AttributeValue) => (() => void) | void,
 		guard?: (value: AttributeValue) => boolean,
 	) => () => void;
 
@@ -53,7 +53,7 @@ interface Observers {
 	observeProperty: <T extends Instance, P extends InstancePropertyNames<T>>(
 		instance: T,
 		property: P,
-		callback: (value: T[P]) => () => void,
+		callback: (value: T[P]) => (() => void) | void,
 	) => () => void;
 
 	/**
@@ -99,7 +99,7 @@ interface Observers {
 	observePlayer: (callback: (player: Player) => ((exitReason: Enum.PlayerExitReason) => void) | void) => () => void;
 
 	/**
-	 * Observers characters in the game.
+	 * Observers characters in the game. An optional list of `allowedPlayers` can be provided. Otherwise, characters from all players are observed.
 	 *
 	 * ```ts
 	 * Observers.observeCharacter((player, character) => {
@@ -130,7 +130,25 @@ interface Observers {
 	 */
 	observeCharacter: <C extends Model = Model>(
 		callback: (player: Player, character: C) => (() => void) | void,
+		allowedPlayers?: Player[],
 	) => () => void;
+
+	/**
+	 * Observers the local character in the game. This can only be called from the client.
+	 * 
+	 * ```ts
+	 * observeLocalCharacter((character) => {
+	 * 	print("Local character added");
+	 * 	return () => {
+	 * 		print("Local character removed");
+	 * 	};
+	 * });
+	 * ```
+	 * 
+	 * @param callback Observer called for the local character. Optional cleanup function can be returned, which is called when the character is removed.
+	 * @returns Cleanup function, which stops observing the local character.
+	 */
+	observeLocalCharacter: <C extends Model = Model>(callback: (character: C) => (() => void) | void) => () => void;
 }
 
 declare const Observers: Observers;
