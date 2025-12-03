@@ -62,7 +62,7 @@ function observeTag<T>(tag: string, callback: Callback<T>, ancestors: { Instance
 	local onInstAddedConn: RBXScriptConnection
 	local onInstRemovedConn: RBXScriptConnection
 
-	local function IsGoodAncestor(instance: Instance)
+	local function isGoodAncestor(instance: Instance)
 		if ancestors == nil then
 			return true
 		end
@@ -76,7 +76,7 @@ function observeTag<T>(tag: string, callback: Callback<T>, ancestors: { Instance
 		return false
 	end
 
-	local function AttemptStartup(instance: Instance)
+	local function attemptStartup(instance: Instance)
 		-- Mark instance as starting up:
 		instances[instance] = "__inflight__"
 
@@ -87,13 +87,13 @@ function observeTag<T>(tag: string, callback: Callback<T>, ancestors: { Instance
 			end
 
 			-- Run the callback in protected mode:
-			local success, cleanup = xpcall(function(inst: T)
-				local clean = (callback :: any)(inst)
+			local success, cleanup = xpcall(function(inst: Instance)
+				local clean = callback(inst)
 				if clean ~= nil then
 					assert(typeof(clean) == "function", "callback must return a function or nil")
 				end
 				return clean
-			end, debug.traceback, instance :: any)
+			end, debug.traceback :: (string) -> string, instance)
 
 			-- If callback errored, print out the traceback:
 			if not success then
@@ -103,7 +103,7 @@ function observeTag<T>(tag: string, callback: Callback<T>, ancestors: { Instance
 				if lastColon then
 					err = firstLine:sub(lastColon + 1)
 				end
-				warn(`error while calling observeTag("{tag}") callback:{err}\n{cleanup}`)
+				warn(`error while calling observeTag("{tag}") callback: {err}\n{cleanup}`)
 				return
 			end
 
@@ -119,7 +119,7 @@ function observeTag<T>(tag: string, callback: Callback<T>, ancestors: { Instance
 		end)
 	end
 
-	local function AttemptCleanup(instance: Instance)
+	local function attemptCleanup(instance: Instance)
 		local cleanup = instances[instance]
 		instances[instance] = "__dead__"
 
@@ -128,17 +128,17 @@ function observeTag<T>(tag: string, callback: Callback<T>, ancestors: { Instance
 		end
 	end
 
-	local function OnAncestryChanged(instance: Instance)
-		if IsGoodAncestor(instance) then
+	local function onAncestryChanged(instance: Instance)
+		if isGoodAncestor(instance) then
 			if instances[instance] == "__dead__" then
-				AttemptStartup(instance)
+				attemptStartup(instance)
 			end
 		else
-			AttemptCleanup(instance)
+			attemptCleanup(instance)
 		end
 	end
 
-	local function OnInstanceAdded(instance: Instance)
+	local function onInstanceAdded(instance: Instance)
 		if not onInstAddedConn.Connected then
 			return
 		end
@@ -149,13 +149,13 @@ function observeTag<T>(tag: string, callback: Callback<T>, ancestors: { Instance
 		instances[instance] = "__dead__"
 
 		ancestryConn[instance] = instance.AncestryChanged:Connect(function()
-			OnAncestryChanged(instance)
+			onAncestryChanged(instance)
 		end)
-		OnAncestryChanged(instance)
+		onAncestryChanged(instance)
 	end
 
-	local function OnInstanceRemoved(instance: Instance)
-		AttemptCleanup(instance)
+	local function onInstanceRemoved(instance: Instance)
+		attemptCleanup(instance)
 
 		local ancestry = ancestryConn[instance]
 		if ancestry then
@@ -167,8 +167,8 @@ function observeTag<T>(tag: string, callback: Callback<T>, ancestors: { Instance
 	end
 
 	-- Hook up added/removed listeners for the given tag:
-	onInstAddedConn = CollectionService:GetInstanceAddedSignal(tag):Connect(OnInstanceAdded)
-	onInstRemovedConn = CollectionService:GetInstanceRemovedSignal(tag):Connect(OnInstanceRemoved)
+	onInstAddedConn = CollectionService:GetInstanceAddedSignal(tag):Connect(onInstanceAdded)
+	onInstRemovedConn = CollectionService:GetInstanceRemovedSignal(tag):Connect(onInstanceRemoved)
 
 	-- Attempt to mark already-existing tagged instances right away:
 	task.defer(function()
@@ -177,7 +177,7 @@ function observeTag<T>(tag: string, callback: Callback<T>, ancestors: { Instance
 		end
 
 		for _, instance in CollectionService:GetTagged(tag) do
-			task.spawn(OnInstanceAdded, instance)
+			task.spawn(onInstanceAdded, instance)
 		end
 	end)
 
@@ -189,7 +189,7 @@ function observeTag<T>(tag: string, callback: Callback<T>, ancestors: { Instance
 		-- Clear all instances:
 		local instance = next(instances)
 		while instance do
-			OnInstanceRemoved(instance)
+			onInstanceRemoved(instance)
 			instance = next(instances)
 		end
 	end
